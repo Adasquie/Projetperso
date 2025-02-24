@@ -1,0 +1,20 @@
+# Certificats
+certs/*.pem
+
+# Logs
+logs/*.log
+
+# Base de données
+*.db
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+.env
+.env.production
+venv/
+
+# IDE
+.vscode/
+.idea/

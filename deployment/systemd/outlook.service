@@ -1,0 +1,25 @@
+[Unit]
+Description=Outlook AI Email Service
+After=network.target postgresql.service
+
+[Service]
+User=outlook
+Group=outlook
+WorkingDirectory=/chemin/vers/votre/app
+Environment="PATH=/chemin/vers/votre/app/venv/bin"
+Environment="FLASK_ENV=production"
+Environment="FLASK_APP=outlook.app:create_app()"
+EnvironmentFile=/chemin/vers/votre/app/.env.production
+
+ExecStart=/chemin/vers/votre/app/venv/bin/gunicorn -c gunicorn_config.py "outlook.app:create_app()"
+Restart=always
+RestartSec=5
+
+# Limites de sécurité
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=full
+ProtectHome=true
+
+[Install]
+WantedBy=multi-user.target 

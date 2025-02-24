@@ -1,0 +1,15 @@
+[build]
+builder = "DOCKERFILE"
+dockerfilePath = "Dockerfile"
+
+[deploy]
+startCommand = "gunicorn --config deployment/gunicorn_config.py wsgi:app"
+healthcheckPath = "/health"
+healthcheckTimeout = 500
+healthcheckInterval = 45
+restartPolicyType = "ON_FAILURE"
+healthcheckMaxRetries = 10
+
+[deploy.resources]
+memory = 1024
+memoryReservation = 512 

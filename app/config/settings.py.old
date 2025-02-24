@@ -1,0 +1,85 @@
+import os
+from dotenv import load_dotenv
+from openai import OpenAI
+import os
+import msal
+
+load_dotenv()
+
+# Environnement (development/production)
+ENV = os.getenv('FLASK_ENV', 'development')
+
+# Variables OAuth exportées
+CLIENT_ID = os.getenv('CLIENT_ID')
+TENANT_ID = os.getenv('TENANT_ID')
+CLIENT_SECRET = os.getenv('CLIENT_SECRET')
+REDIRECT_URI = os.getenv('REDIRECT_URI')
+
+# Configuration OAuth2.0
+OAUTH_CONFIG = {
+    'development': {
+        'client_id': CLIENT_ID,
+        'client_secret': CLIENT_SECRET,
+        'tenant_id': TENANT_ID,
+        'redirect_uri': REDIRECT_URI,
+        'authority': f"https://login.microsoftonline.com/{TENANT_ID}",
+        'scopes': ['User.Read', 'Mail.ReadWrite', 'Mail.Send', 'offline_access']
+    },
+    'production': {
+        'client_id': CLIENT_ID,
+        'client_secret': CLIENT_SECRET,
+        'tenant_id': TENANT_ID,
+        'redirect_uri': REDIRECT_URI,
+        'authority': f"https://login.microsoftonline.com/{TENANT_ID}",
+        'scopes': ['User.Read', 'Mail.ReadWrite', 'Mail.Send', 'offline_access']
+    }
+}
+
+# Configuration actuelle basée sur l'environnement
+current_config = OAUTH_CONFIG[ENV]
+
+# Configuration Base de données
+DATABASE_URL = os.getenv('DATABASE_URL', 'sqlite:///./outlook.db')
+
+# Configuration API
+GRAPH_API_ENDPOINT = "https://graph.microsoft.com/v1.0"
+
+# Configuration OpenAI
+api_key = os.getenv("OPENAI_API_KEY")
+client = OpenAI(api_key=api_key)
+
+client_id = "6fa42d46-6042-445e-ae97-8a4456000cf5"
+authority = "https://login.microsoftonline.com/consumers"
+scope = ["Mail.Read", "Mail.Send", "User.Read", "Mail.ReadWrite"]
+
+app = msal.PublicClientApplication(client_id, authority=authority)
+
+_authenticated = False
+result = None
+
+
+def authenticate():
+    global _authenticated, result
+    if not _authenticated:
+        flow = app.initiate_device_flow(scopes=scope)
+        if "user_code" not in flow:
+            raise ValueError(
+                "Erreur lors de l'initiation du flux de code de périphérique"
+            )
+
+        print("Veuillez entrer ce code dans le navigateur :", flow["user_code"])
+        print("Lien d'authentification :", flow["verification_uri"])
+
+        result = app.acquire_token_by_device_flow(flow)
+        if "access_token" not in result:
+            raise ValueError(
+                "Erreur d'authentification :",
+                result.get("error"),
+                result.get("error_description"),
+            )
+        _authenticated = True
+    return result
+
+
+def get_auth_result():
+    return result
